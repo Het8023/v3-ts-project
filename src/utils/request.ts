@@ -8,7 +8,7 @@ import axios, {
 import type { DataType } from './types'
 
 const service: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_APP_BASE_API,
   timeout: 20000
 })
 
