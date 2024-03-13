@@ -6,9 +6,9 @@ import { h, resolveComponent } from 'vue'
 
 const props = withDefaults(
   defineProps<{
-    color: string
-    size: string | number
-    name: string
+    color?: string
+    size?: string | number
+    name?: string
   }>(),
   {
     name: '',

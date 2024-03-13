@@ -1,23 +1,96 @@
 <template>
   <div class="layout-header-breadcrumb">
-    <svg-icon class="layout-header-expand-icon" name="ele-Fold"></svg-icon>
+    <svg-icon
+      :name="isCollapse ? 'ele-Expand' : 'ele-Fold'"
+      class="layout-header-expand-icon"
+      @click="handleCollapse"
+    ></svg-icon>
+
     <el-breadcrumb separator="/">
-      <el-breadcrumb-item :to="{ path: '/' }">
-        <span class="flex-center">
-          <svg-icon :size="14" name="ele-Setting"></svg-icon>
-          系统管理
-        </span>
-      </el-breadcrumb-item>
-      <el-breadcrumb-item>
-        <span class="flex-center">
-          <svg-icon :size="14" name="ele-Menu"></svg-icon>
-          菜单管理
-        </span>
-      </el-breadcrumb-item>
+      <transition-group name="breadcrumb">
+        <template v-for="(item, index) in breadcrumbList" :key="index">
+          <el-breadcrumb-item v-if="index === breadcrumbList.length - 1">
+            <span class="flex-center">
+              <svg-icon
+                v-if="item.meta.icon"
+                :name="item.meta.icon"
+                :size="14"
+                class="mr5"
+              ></svg-icon>
+              {{ item.meta.title }}
+            </span>
+          </el-breadcrumb-item>
+          <el-breadcrumb-item v-else :to="item.path">{{ item.meta.title }}</el-breadcrumb-item>
+        </template>
+      </transition-group>
     </el-breadcrumb>
   </div>
 </template>
 
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+import { useLayoutConfigStore } from '@/stores/layoutConfig'
+import { computed, onMounted, ref } from 'vue'
+import {
+  useRoute,
+  type RouteRecordNormalized,
+  type RouteLocationNormalized,
+  onBeforeRouteUpdate
+} from 'vue-router'
 
-<style lang="scss" scoped></style>
+// 初始化store
+const store = useLayoutConfigStore()
+// 展开与收起方法
+const handleCollapse = () => {
+  store.isCollapse = !store.isCollapse
+}
+
+// 展开与收起的状态
+const isCollapse = computed(() => {
+  return store.isCollapse
+})
+
+// 初始化route
+const route = useRoute()
+
+// 保存面包屑导航的数据
+const breadcrumbList = ref<RouteRecordNormalized[]>([])
+
+// 获取当前路由的面包屑数据
+const getBreadcrumb = (to: RouteLocationNormalized) => {
+  console.log('to', to)
+  const matched = to.matched.filter((item: RouteRecordNormalized) => {
+    console.log('item=>', item)
+    if (item.meta && item.meta.title && item.meta.isBreadcrumb !== false) {
+      return item
+    }
+  })
+
+  breadcrumbList.value = matched
+}
+
+onBeforeRouteUpdate((to: RouteLocationNormalized) => {
+  getBreadcrumb(to)
+})
+
+onMounted(() => {
+  getBreadcrumb(route)
+})
+</script>
+
+<style lang="scss" scoped>
+.breadcrumb-enter-active,
+.breadcrumb-leave-active {
+  transition: all 0.3s;
+}
+
+.breadcrumb-enter-from,
+.breadcrumb-leave-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.breadcrumb-leave-active {
+  position: absolute;
+  z-index: -1;
+}
+</style>
